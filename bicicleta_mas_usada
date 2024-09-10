@@ -1,0 +1,39 @@
+-- Crear un CTE (Common Table Expression) para encontrar la bicicleta más utilizada
+WITH
+  longest_used_bike AS (
+    -- Seleccionar el ID de la bicicleta y sumar la duración total de los viajes
+    SELECT
+      bike_id, 
+      SUM(duration_minutes) AS trip_duration
+    FROM 
+      bigquery-public-data.austin_bikeshare.bikeshare_trips
+    -- Agrupar los resultados por el ID de la bicicleta
+    GROUP BY
+      bike_id
+    -- Ordenar las bicicletas por la duración total de los viajes en orden descendente
+    ORDER BY
+      trip_duration DESC
+    -- Limitar el resultado a la bicicleta con la mayor duración total de viajes
+    LIMIT 1
+  )
+
+-- Encontrar la estación donde la bicicleta más utilizada sale con mayor frecuencia
+SELECT
+  trips.start_station_id, 
+  -- Contar la cantidad de viajes que comienzan en cada estación
+  COUNT(*) AS trip_ct 
+FROM
+  -- Unir el CTE con la tabla de viajes de bicicletas
+  longest_used_bike AS longest
+INNER JOIN
+  bigquery-public-data.austin_bikeshare.bikeshare_trips AS trips
+  -- Relacionar las tablas utilizando el ID de la bicicleta
+  ON longest.bike_id = trips.bike_id
+-- Agrupar los resultados por el ID de la estación de inicio
+GROUP BY
+  trips.start_station_id
+-- Ordenar los resultados por la cantidad de viajes en orden descendente
+ORDER BY
+  trip_ct DESC
+-- Limitar el resultado a la estación con más salidas de la bicicleta más utilizada
+LIMIT 1
